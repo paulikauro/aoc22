@@ -1,4 +1,4 @@
-(ns day1
+(ns day11
   (:require [clojure.edn :as edn]
             [instaparse.core :as insta]))
 
@@ -61,7 +61,7 @@ Monkey 3:
                  (let [resolve #(if (= % "old") old %)
                        x (resolve x)
                        y (resolve y)
-                       op ({"+" + "*" *} op)]
+                       op ({"+" +' "*" *'} op)]
                    (op x y))))
          :items vector
          :monkey (zap :items :op :div :iftrue :iffalse)})
@@ -71,10 +71,10 @@ Monkey 3:
 (defn divides [divisor x]
   (== 0 (mod x divisor)))
 
-(defn do-turn [n monkeys items]
+(defn do-turn [n monkeys items don't-worry]
   (let [{:keys [op div iftrue iffalse]} (nth monkeys n)
         do-item (fn [items lvl]
-                  (let [lvl (int (/ (op lvl) 3))
+                  (let [lvl (don't-worry (op lvl))
                         divs? (divides div lvl)
                         dest (if divs? iftrue iffalse)]
                     (update-in items [dest :items] conj lvl)))
@@ -84,13 +84,13 @@ Monkey 3:
                           (assoc :items []))]
     (reduce do-item (update items n update-items) monkey-items)))
 
-(defn do-round [monkeys items]
-  (reduce (fn [items n] (do-turn n monkeys items)) items (range (count monkeys))))
+(defn do-round [monkeys items don't-worry]
+  (reduce (fn [items n] (do-turn n monkeys items don't-worry)) items (range (count monkeys))))
 
-(defn do-all-rounds [monkeys]
+(defn do-all-rounds [monkeys rounds don't-worry]
   (let [monkify #(hash-map :items (:items %) :count 0)
         items (mapv monkify monkeys)]
-    (nth (iterate #(do-round monkeys %) items) 20)))
+    (nth (iterate #(do-round monkeys % don't-worry) items) rounds)))
 
 (defn monke-bisnes [items]
   (->> items
@@ -102,17 +102,22 @@ Monkey 3:
 (defn solve []
   (-> "src/day11_input.txt"
       slurp parse
-      do-all-rounds monke-bisnes))
+      (do-all-rounds 20 #(int (/ % 3))) monke-bisnes))
+
+(defn solve2 []
+  (let [monkeys (-> "src/day11_input.txt" slurp parse)
+        max-worry (->> monkeys (map :div) (apply *))
+        don't-worry #(mod % max-worry)]
+    (-> monkeys
+        (do-all-rounds 10000 don't-worry)
+        monke-bisnes)))
 
 (comment
   (monkey-parser test-input)
 
-  (do-all-rounds (parse test-input))
-
-  (monke-bisnes (do-all-rounds (parse test-input)))
-
   (parse (slurp "src/day11_input.txt"))
   (solve)
+  (solve2)
 
 
   nil)
