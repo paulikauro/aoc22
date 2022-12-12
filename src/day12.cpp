@@ -39,6 +39,20 @@ vector<pair<ll, ll>> neighbors(ll y, ll x) {
     return ret;
 }
 
+vector<pair<ll, ll>> all_as() {
+    //cout << "finding as\n";
+    vector<pair<ll, ll>> ret;
+    for (ll y = 0; y < h; y++) {
+        for (ll x = 0; x < w; x++) {
+            //cout << a[y][x] << nl;
+            if (a[y][x] == 'a') {
+                ret.push_back({y, x});
+            }
+        }
+    }
+    return ret;
+}
+
 int main() {
     string line;
     while (getline(cin, line)) {
@@ -57,40 +71,38 @@ int main() {
     a[sy][sx] = 'a';
     a[ey][ex] = 'z';
     w = a[0].length();
-    d = vector(h, vector(w, inf));
-    v = vector(h, vector(w, false));
-    d[sy][sx] = 0;
-    q.push({0, {sy, sx}});
-    while (!q.empty()) {
-        auto [kd, koords] = q.top();
-        auto [ky, kx] = koords;
-        q.pop();
-        if (v[ky][kx]) {
-            continue;
-        }
-        //cout << "processing " << ky << "," << kx << " with dist " << kd << nl;
-        v[ky][kx] = true;
-        for (auto [ny, nx] : neighbors(ky, kx)) {
-            //cout << "\tneighbor " << ny << "," << nx;
-            // cost always 1
-            ll new_d = d[ky][kx] + 1;
-            if (new_d < d[ny][nx]) {
-                d[ny][nx] = new_d;
-                //cout << ": new_d " << new_d;
-                q.push({new_d, {ny, nx}});
+    ll lowest = inf;
+    for (auto [ay, ax] : all_as()) {
+        //cout << ay << "," << ax << nl;
+        sy = ay; sx = ax;
+        d = vector(h, vector(w, inf));
+        v = vector(h, vector(w, false));
+        d[sy][sx] = 0;
+        q.push({0, {sy, sx}});
+        while (!q.empty()) {
+            auto [kd, koords] = q.top();
+            auto [ky, kx] = koords;
+            q.pop();
+            if (v[ky][kx]) {
+                continue;
             }
-            //cout << nl;
+            //cout << "processing " << ky << "," << kx << " with dist " << kd << nl;
+            v[ky][kx] = true;
+            for (auto [ny, nx] : neighbors(ky, kx)) {
+                //cout << "\tneighbor " << ny << "," << nx;
+                // cost always 1
+                ll new_d = d[ky][kx] + 1;
+                if (new_d < d[ny][nx]) {
+                    d[ny][nx] = new_d;
+                    //cout << ": new_d " << new_d;
+                    q.push({new_d, {ny, nx}});
+                }
+                //cout << nl;
+            }
         }
+        lowest = min(lowest, d[ey][ex]);
     }
-    /*for (ll y = 0; y < h; y++)
-    {
-        for (ll x = 0; x < w; x++) {
-            cout << d[y][x] << ' ';
-        }
-        cout << nl;
-    }*/
-    cout << d[ey][ex] << nl;
+    cout << lowest << nl;
     return 0;
 }
-
 
