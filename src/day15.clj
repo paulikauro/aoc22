@@ -72,17 +72,12 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3")
       (point-range p3 p4)
       (point-range p4 p1)))))
 
-(defn maybe-intersect [x y]
-  (let [i (intersection x y)]
-    (if (empty? i) x y)))
-
 (defn solve2 [s x-max y-max]
   (let [ss (parse s)
         valid? (fn [[x y]] (and (>= x 0) (>= y 0)
                                 (<= x x-max) (<= y y-max)))
-        points (filter valid? (reduce maybe-intersect (map borders ss)))
-        _ (prn points)
-        [x y] (first points)]
+        points (frequencies (apply concat (map (comp (partial filter valid?) borders) ss)))
+        [x y] (second (last (sort (map (fn [[x y]] [y x]) points))))]
     (+ (* x 4000000) y)))
 
 (defn input []
@@ -93,6 +88,6 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3")
   (solve1 test-input 10)
   (time (solve1 (input) 2000000))
   (borders [[8 7] [2 10]])
-  (map (comp sort borders) (parse test-input))
-  (solve2 test-input)
+  (solve2 test-input 20 20)
+  (solve2 (input) 4000000 4000000)
   nil)
