@@ -59,25 +59,32 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3")
 (defn point-range [[x1 y1] [x2 y2]]
   (map vector (range' x1 x2) (range' y1 y2)))
 
-(defn borders [[[sx sy] [bx by]]]
-  (let [d (inc (distance sx sy bx by))
+(defn borders [[[sx sy] dist]]
+  (let [d (inc dist)
         p1 [sx (- sy d)]
         p2 [(+ sx d) sy]
         p3 [sx (+ sy d)]
         p4 [(- sx d) sy]]
-    (set
-     (concat
-      (point-range p1 p2)
-      (point-range p2 p3)
-      (point-range p3 p4)
-      (point-range p4 p1)))))
+    (concat
+     (point-range p1 p2)
+     (point-range p2 p3)
+     (point-range p3 p4)
+     (point-range p4 p1))))
+
+(defn not-in? [[[sx sy] d] [x y]]
+  (> (distance sx sy x y) d))
+
+(defn outside-all? [ss p]
+  (every? #(not-in? % p) ss))
 
 (defn solve2 [s x-max y-max]
-  (let [ss (parse s)
+  (let [ss (map (fn [[[sx sy] [bx by]]] [[sx sy] (distance sx sy bx by)]) (parse s))
         valid? (fn [[x y]] (and (>= x 0) (>= y 0)
                                 (<= x x-max) (<= y y-max)))
-        points (frequencies (apply concat (map (comp (partial filter valid?) borders) ss)))
-        [x y] (second (last (sort (map (fn [[x y]] [y x]) points))))]
+        points (filter valid? (mapcat borders ss))
+        ans (filter (partial outside-all? ss) points)
+        ;;_ (prn ans)
+        [x y] (first ans)]
     (+ (* x 4000000) y)))
 
 (defn input []
